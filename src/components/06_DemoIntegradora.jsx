@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ResumenKPIs from './ResumenKPIs.jsx';
 
 // ============================================================================
 // [CLAVE EXPOSICIÓN 6] DEMO INTEGRADORA DE TODAS LAS CARACTERÍSTICAS DE JSX
@@ -143,6 +144,9 @@ export default function DemoIntegradora() {
         <p className="subtitle">
           Composición de componentes reutilizables aplicando todas las reglas de JSX.
         </p>
+
+        {/* [Ticket 09] Indicadores sobre la lista visible (respeta filtros y búsqueda) */}
+        <ResumenKPIs alumnos={listaFiltrada} />
 
         <div className="grid-2" style={{ marginBottom: '0.5rem' }}>
           <div className="field">
