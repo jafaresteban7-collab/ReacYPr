@@ -17,6 +17,19 @@ const EXPEDIENTES = [
   { id: 103, nombre: 'Sofía Navarro', nota: 9.5, modulos: ['DI', 'PSP', 'AD', 'PMDM'] }
 ];
 
+// [Ticket 07] Criterios de ordenación disponibles
+const ORDENACIONES = {
+  'nota-desc': { etiqueta: 'Nota (mayor a menor)', comparar: (a, b) => b.nota - a.nota },
+  'nota-asc': { etiqueta: 'Nota (menor a mayor)', comparar: (a, b) => a.nota - b.nota },
+  'nombre-asc': {
+    etiqueta: 'Nombre (A–Z)',
+    comparar: (a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+  }
+};
+
+const normalizar = (texto) =>
+  texto.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+
 function TarjetaExpediente({ alumno, seleccionado, onSeleccionar }) {
   const aprobado = alumno.nota >= 5;
 
@@ -24,11 +37,11 @@ function TarjetaExpediente({ alumno, seleccionado, onSeleccionar }) {
     <article
       className="box"
       style={{
-        borderColor: seleccionado ? '#38bdf8' : '#334155',
+        borderColor: seleccionado ? 'var(--primary)' : 'var(--border)',
         borderWidth: seleccionado ? '2px' : '1px'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
         <h3 style={{ margin: 0 }}>{alumno.nombre}</h3>
         <span className={`badge ${aprobado ? 'badge-ok' : 'badge-fail'}`}>
           {aprobado ? `Aprobado (${alumno.nota})` : `Pendiente (${alumno.nota})`}
@@ -57,10 +70,15 @@ function TarjetaExpediente({ alumno, seleccionado, onSeleccionar }) {
 export default function DemoIntegradora() {
   const [soloAprobados, setSoloAprobados] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [orden, setOrden] = useState('nota-desc');
 
-  const listaFiltrada = soloAprobados
-    ? EXPEDIENTES.filter((a) => a.nota >= 5)
-    : EXPEDIENTES;
+  // [Ticket 07] Búsqueda por nombre + filtro de aprobados + ordenación
+  const termino = normalizar(busqueda);
+  const listaFiltrada = EXPEDIENTES
+    .filter((a) => !soloAprobados || a.nota >= 5)
+    .filter((a) => normalizar(a.nombre).includes(termino))
+    .sort(ORDENACIONES[orden].comparar);
 
   return (
     <>
@@ -69,6 +87,35 @@ export default function DemoIntegradora() {
         <p className="subtitle">
           Composición de componentes reutilizables aplicando todas las reglas de JSX.
         </p>
+
+        <div className="grid-2" style={{ marginBottom: '0.5rem' }}>
+          <div className="field">
+            <label htmlFor="buscar-expediente">Buscar alumno por nombre:</label>
+            <input
+              id="buscar-expediente"
+              type="search"
+              className="input"
+              placeholder="Ej.: Lucía"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="orden-expedientes">Ordenar por:</label>
+            <select
+              id="orden-expedientes"
+              className="input"
+              value={orden}
+              onChange={(e) => setOrden(e.target.value)}
+            >
+              {Object.entries(ORDENACIONES).map(([clave, { etiqueta }]) => (
+                <option key={clave} value={clave}>
+                  {etiqueta}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         <div className="btn-row" style={{ marginBottom: '1rem', alignItems: 'center' }}>
           <button
@@ -86,16 +133,22 @@ export default function DemoIntegradora() {
           )}
         </div>
 
-        <div className="grid-2">
-          {listaFiltrada.map((alumno) => (
-            <TarjetaExpediente
-              key={alumno.id}
-              alumno={alumno}
-              seleccionado={seleccionado?.id === alumno.id}
-              onSeleccionar={setSeleccionado}
-            />
-          ))}
-        </div>
+        {listaFiltrada.length === 0 ? (
+          <p className="empty-state" role="status">
+            No se encontraron expedientes con esos criterios
+          </p>
+        ) : (
+          <div className="grid-2">
+            {listaFiltrada.map((alumno) => (
+              <TarjetaExpediente
+                key={alumno.id}
+                alumno={alumno}
+                seleccionado={seleccionado?.id === alumno.id}
+                onSeleccionar={setSeleccionado}
+              />
+            ))}
+          </div>
+        )}
 
         <p className="file-hint">
           Archivo para mostrar en VS Code: <code className="code-inline">src/components/06_DemoIntegradora.jsx</code>
