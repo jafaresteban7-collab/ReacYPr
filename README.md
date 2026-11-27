@@ -2,7 +2,7 @@
 
 **Autor:** Alvaro Esteban Jimenez<br>
 **Repositorio:** https://github.com/jafaresteban7-collab/ReacYPr<br>
-**Aplicación desplegada:** _pendiente de despliegue en Vercel_
+**Aplicación desplegada:** https://reac-y-pr.vercel.app/
 
 Evolución del proyecto base `m10-2-jsx-react-demo` (React 18 + Vite) desde una demo técnica hasta un prototipo funcional, implementando los 10 tickets del backlog del sprint.
 
@@ -44,4 +44,4 @@ Cada pestaña de la aplicación corresponde a un archivo numerado dentro de `src
 
 ## Despliegue
 
-Desplegado en Vercel importando este repositorio (preset Vite: build `npm run build`, salida `dist`).
+Desplegado en Vercel en https://reac-y-pr.vercel.app/ importando este repositorio (preset Vite: build `npm run build`, salida `dist`).
