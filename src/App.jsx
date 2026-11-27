@@ -11,7 +11,7 @@ import EventosYSeguridadXSS from './components/05_EventosYSeguridadXSS.jsx';
 import DemoIntegradora from './components/06_DemoIntegradora.jsx';
 
 // Datos del pie de página corporativo (Ticket 01)
-const AUTOR = 'TU NOMBRE COMPLETO';
+const AUTOR = 'Alvaro Esteban Jimenez';
 const MODULO = 'M10.2 · JSX con React';
 const CLAVE_TEMA = 'm10-2-tema';
 

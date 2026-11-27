@@ -1,6 +1,7 @@
 # M10.2. JSX con React — Prototipo funcional
 
-**Autor/a:** TU NOMBRE COMPLETO
+**Autor:** Alvaro Esteban Jimenez<br>
+**Repositorio:** https://github.com/jafaresteban7-collab/ReacYPr<br>
 **Aplicación desplegada:** _pendiente de despliegue en Vercel_
 
 Evolución del proyecto base `m10-2-jsx-react-demo` (React 18 + Vite) desde una demo técnica hasta un prototipo funcional, implementando los 10 tickets del backlog del sprint.
