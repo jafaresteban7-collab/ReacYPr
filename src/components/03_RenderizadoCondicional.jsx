@@ -9,7 +9,8 @@ import { useState } from 'react';
 // 4. TRAMPA CLÁSICA DE EXAMEN:
 //    `{notificaciones && <p>...</p>}` -> Si `notificaciones` vale 0, React
 //    NO lo ignora: pinta literalmente el número "0" en pantalla.
-//    SOLUCIÓN: Convertir siempre a booleano -> `{notificaciones > 0 && ...}`.
+//    SOLUCIÓN: Convertir siempre a booleano -> `{notificaciones > 0 && ...}`
+//    o `{Boolean(notificaciones) && ...}`.
 // ============================================================================
 
 export default function RenderizadoCondicional() {
@@ -47,8 +48,14 @@ export default function RenderizadoCondicional() {
         <button type="button" className="btn" onClick={() => setNotificaciones((n) => n + 1)}>
           +1 Notificación ({notificaciones})
         </button>
-        <button type="button" className="btn btn-danger" onClick={() => setNotificaciones(0)}>
-          Poner a 0
+        {/* [Ticket 04] Deshabilitado cuando no hay avisos pendientes */}
+        <button
+          type="button"
+          className="btn btn-danger"
+          onClick={() => setNotificaciones(0)}
+          disabled={notificaciones === 0}
+        >
+          Marcar todas como leídas
         </button>
       </div>
 
@@ -66,27 +73,36 @@ export default function RenderizadoCondicional() {
           </p>
         </div>
 
-        {/* 3. OPERADOR && — COMPARATIVA CON Y SIN LA TRAMPA DEL 0 */}
+        {/* 3. OPERADOR && — TRAMPA DEL 0 CORREGIDA */}
         <div className="box box-danger">
-          <h3>Demostración en vivo: la Trampa del 0</h3>
-          <p style={{ fontSize: '0.88rem', color: '#cbd5e1', marginBottom: '0.5rem' }}>
-            Pon el contador a <strong>0</strong> y observa la diferencia entre ambos bloques:
+          <h3>La Trampa del 0 (corregida)</h3>
+          <p className="text-soft" style={{ marginBottom: '0.5rem' }}>
+            Antes se usaba <code className="code-inline">notificaciones &amp;&amp; ...</code>, que pintaba un
+            <strong> 0</strong> suelto cuando el contador llegaba a cero. Ahora ambas variantes convierten la
+            condición a booleano:
           </p>
 
           <p>
-            <strong>Incorrecto</strong> (<code className="code-inline">notificaciones &amp;&amp; ...</code>):{' '}
-            {/* BUG INTENCIONADO CON FINES DIDÁCTICOS: cuando vale 0, pinta "0" */}
-            <span style={{ color: '#f87171', fontWeight: 'bold' }}>
-              {notificaciones && <span>Tienes {notificaciones} avisos</span>}
+            <strong>Corregido</strong> (<code className="code-inline">Boolean(notificaciones) &amp;&amp; ...</code>):{' '}
+            {/* [Ticket 04] Antes: {notificaciones && ...} -> pintaba "0" */}
+            <span style={{ color: 'var(--red-text)', fontWeight: 'bold' }}>
+              {Boolean(notificaciones) && <span>Tienes {notificaciones} avisos</span>}
             </span>
           </p>
 
           <p style={{ marginTop: '0.4rem' }}>
             <strong>Correcto</strong> (<code className="code-inline">notificaciones &gt; 0 &amp;&amp; ...</code>):{' '}
-            <span style={{ color: '#34d399', fontWeight: 'bold' }}>
+            <span style={{ color: 'var(--green-text)', fontWeight: 'bold' }}>
               {notificaciones > 0 && <span>Tienes {notificaciones} avisos</span>}
             </span>
           </p>
+
+          {/* [Ticket 04] Estado vacío informativo */}
+          {notificaciones === 0 && (
+            <p className="empty-state" role="status">
+              Estás al día. No tienes notificaciones pendientes
+            </p>
+          )}
         </div>
       </div>
 
