@@ -16,14 +16,35 @@ import { useState } from 'react';
 
 const formatearEuros = (cantidad) => `${cantidad.toFixed(2)} €`;
 
+// [Ticket 03] Tipos impositivos disponibles
+const TIPOS_IVA = [
+  { id: 'general', etiqueta: 'General (21%)', tasa: 0.21 },
+  { id: 'reducido', etiqueta: 'Reducido (10%)', tasa: 0.1 },
+  { id: 'superreducido', etiqueta: 'Superreducido (4%)', tasa: 0.04 }
+];
+
+const DESCUENTO_MAX = 50;
+
+// Acota un valor numérico al rango [min, max]
+const acotar = (valor, min, max) => Math.min(max, Math.max(min, valor));
+
 export default function ExpresionesYEstilos() {
   const [precioBase, setPrecioBase] = useState(100);
   const [colorDestacado, setColorDestacado] = useState('#38bdf8');
-  const IVA = 0.21;
+  const [tipoIva, setTipoIva] = useState('general');
+  const [descuento, setDescuento] = useState(0);
+
+  const IVA = TIPOS_IVA.find((t) => t.id === tipoIva).tasa;
+
+  // [Ticket 03] Desglose fiscal completo
+  const importeDescontado = precioBase * (descuento / 100);
+  const baseImponible = precioBase - importeDescontado;
+  const cuotaIva = baseImponible * IVA;
+  const totalFinal = baseImponible + cuotaIva;
 
   // Objeto de estilos dinámico en JavaScript
   const estiloTarjetaDinamica = {
-    backgroundColor: '#0f172a',
+    backgroundColor: 'var(--surface-alt)',
     border: `2px solid ${colorDestacado}`,
     borderRadius: '10px',
     padding: '1rem',
@@ -39,24 +60,79 @@ export default function ExpresionesYEstilos() {
 
       <div className="grid-2">
         <div className="box">
-          <h3>Expresiones evaluadas en tiempo real</h3>
-          <label htmlFor="precio-input">Precio base (€):</label>
-          <input
-            id="precio-input"
-            type="number"
-            className="input"
-            value={precioBase}
-            onChange={(e) => setPrecioBase(Number(e.target.value) || 0)}
-          />
+          <h3>Calculadora fiscal (expresiones en tiempo real)</h3>
+
+          <div className="field">
+            <label htmlFor="precio-input">Precio base (€):</label>
+            <input
+              id="precio-input"
+              type="number"
+              min="0"
+              step="0.01"
+              className="input"
+              value={precioBase}
+              onChange={(e) => setPrecioBase(Math.max(0, Number(e.target.value) || 0))}
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="iva-select">Tipo de IVA:</label>
+            <select
+              id="iva-select"
+              className="input"
+              value={tipoIva}
+              onChange={(e) => setTipoIva(e.target.value)}
+            >
+              {TIPOS_IVA.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.etiqueta}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+            <label htmlFor="descuento-input">Descuento (%) entre 0 y {DESCUENTO_MAX}:</label>
+            <input
+              id="descuento-input"
+              type="number"
+              min="0"
+              max={DESCUENTO_MAX}
+              className="input"
+              value={descuento}
+              onChange={(e) => setDescuento(acotar(Number(e.target.value) || 0, 0, DESCUENTO_MAX))}
+            />
+          </div>
 
           <ul className="list">
             <li className="list-item">
-              <span>Operación matemática directa:</span>
-              <strong>{precioBase * IVA} € (IVA 21%)</strong>
+              <span>Precio Base:</span>
+              <strong>{formatearEuros(precioBase)}</strong>
             </li>
             <li className="list-item">
-              <span>Llamada a función:</span>
-              <strong>{formatearEuros(precioBase * (1 + IVA))}</strong>
+              <span>Importe Descontado ({descuento}%):</span>
+              <strong>- {formatearEuros(importeDescontado)}</strong>
+            </li>
+            <li className="list-item">
+              <span>Base Imponible:</span>
+              <strong>{formatearEuros(baseImponible)}</strong>
+            </li>
+            <li className="list-item">
+              <span>Cuota de IVA ({Math.round(IVA * 100)}%):</span>
+              <strong>{formatearEuros(cuotaIva)}</strong>
+            </li>
+            <li className="list-item">
+              <span>Total Final:</span>
+              {/* [Ticket 03] Resaltado en verde solo cuando hay descuento */}
+              <strong
+                style={
+                  descuento > 0
+                    ? { color: '#10b981', fontSize: '1.1rem' }
+                    : { fontSize: '1.1rem' }
+                }
+              >
+                {formatearEuros(totalFinal)}
+              </strong>
             </li>
             <li className="list-item">
               <span>Valores ignorados (true/false/null):</span>
@@ -69,7 +145,7 @@ export default function ExpresionesYEstilos() {
           <h3 style={{ color: colorDestacado, marginTop: 0 }}>
             Estilos en línea con style=&#123;&#123; camelCase &#125;&#125;
           </h3>
-          <p style={{ fontSize: '0.92rem', color: '#cbd5e1' }}>
+          <p className="text-soft">
             El borde y el título de este recuadro se calculan dinámicamente desde un objeto
             JavaScript usando <code className="code-inline">border</code> y <code className="code-inline">color</code>.
           </p>
