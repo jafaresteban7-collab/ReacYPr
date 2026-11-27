@@ -1,16 +1,58 @@
-:root {
+/* ==========================================================================
+   PALETAS DE COLOR (Ticket 01)
+   El contenedor principal lleva la clase .theme-dark o .theme-light y todas
+   las reglas de abajo leen estas variables, así que cambiar la clase basta
+   para cambiar el tema completo.
+   ========================================================================== */
+:root,
+.theme-dark {
   --bg: #0f172a;
   --surface: #1e293b;
   --surface-alt: #0b1220;
   --border: #334155;
   --text: #f1f5f9;
+  --text-soft: #cbd5e1;
+  --heading: #e2e8f0;
   --muted: #94a3b8;
   --primary: #38bdf8;
   --primary-dark: #0284c7;
   --green: #10b981;
+  --green-text: #34d399;
   --amber: #f59e0b;
   --red: #ef4444;
+  --red-text: #f87171;
   --purple: #a78bfa;
+  --code-bg: #0f172a;
+  --code-text: #7dd3fc;
+  --input-bg: #0f172a;
+  --btn-secondary: #334155;
+  --header-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color-scheme: dark;
+}
+
+.theme-light {
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --border: #cbd5e1;
+  --text: #0f172a;
+  --text-soft: #334155;
+  --heading: #1e293b;
+  --muted: #64748b;
+  --primary: #0369a1;
+  --primary-dark: #0284c7;
+  --green: #059669;
+  --green-text: #047857;
+  --amber: #d97706;
+  --red: #dc2626;
+  --red-text: #b91c1c;
+  --purple: #7c3aed;
+  --code-bg: #e2e8f0;
+  --code-text: #0c4a6e;
+  --input-bg: #ffffff;
+  --btn-secondary: #475569;
+  --header-bg: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
+  color-scheme: light;
 }
 
 * {
@@ -21,10 +63,16 @@
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: #0f172a;
   line-height: 1.6;
   min-height: 100vh;
+}
+
+.app {
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .layout {
@@ -34,7 +82,7 @@ body {
 }
 
 .header {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: var(--header-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 1.4rem 1.8rem;
@@ -54,6 +102,12 @@ body {
 .header p {
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .pill {
@@ -112,7 +166,7 @@ body {
 
 .card h3 {
   font-size: 1.02rem;
-  color: #e2e8f0;
+  color: var(--heading);
   margin: 1rem 0 0.4rem;
 }
 
@@ -122,10 +176,22 @@ body {
   margin-bottom: 1rem;
 }
 
+.text-soft {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 1rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .box {
@@ -148,8 +214,8 @@ body {
 }
 
 .code-inline {
-  background: #0f172a;
-  color: #7dd3fc;
+  background: var(--code-bg);
+  color: var(--code-text);
   padding: 0.15rem 0.45rem;
   border-radius: 5px;
   font-family: Consolas, 'Courier New', monospace;
@@ -172,8 +238,13 @@ body {
   opacity: 0.9;
 }
 
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
-  background: #334155;
+  background: var(--btn-secondary);
 }
 
 .btn-danger {
@@ -189,7 +260,7 @@ body {
 
 .input {
   width: 100%;
-  background: #0f172a;
+  background: var(--input-bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -201,6 +272,40 @@ body {
 .input:focus {
   outline: none;
   border-color: var(--primary);
+}
+
+.input-error {
+  border-color: var(--red);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.msg-error {
+  color: var(--red-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+}
+
+.msg-ok {
+  color: var(--green-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 0.75rem;
 }
 
 .list {
@@ -232,12 +337,35 @@ body {
 
 .badge-ok {
   background: rgba(16, 185, 129, 0.18);
-  color: #34d399;
+  color: var(--green-text);
 }
 
 .badge-fail {
   background: rgba(239, 68, 68, 0.18);
-  color: #f87171;
+  color: var(--red-text);
+}
+
+.kpi {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kpi-value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .file-hint {
@@ -246,4 +374,16 @@ body {
   color: var(--muted);
   border-top: 1px dashed var(--border);
   padding-top: 0.75rem;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding: 1rem 0 0.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.88rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
