@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 // ============================================================================
 // [CLAVE EXPOSICIÓN 5] EVENTOS EN JSX Y SEGURIDAD AUTOMÁTICA CONTRA XSS
@@ -15,20 +15,48 @@ import { useState } from 'react';
 //      pinta como texto plano seguro sin ejecutar código JavaScript.
 // ============================================================================
 
+const MAX_EVENTOS = 5;
+
+// [Ticket 06] Vectores de prueba: JSX debe mostrarlos como texto sin ejecutarlos
+const PAYLOADS_XSS = [
+  { id: 'img', etiqueta: '<img onerror>', valor: `<img src=x onerror="alert('XSS img')" />` },
+  { id: 'script', etiqueta: '<script>', valor: `<script>alert(document.cookie)</script>` },
+  {
+    id: 'svg',
+    etiqueta: '<svg onload> + javascript:',
+    valor: `<svg onload="alert('XSS svg')"></svg><a href="javascript:alert('XSS link')">clic</a>`
+  }
+];
+
 export default function EventosYSeguridadXSS() {
-  const [ultimoEvento, setUltimoEvento] = useState('Ninguno todavía');
-  const [entradaUsuario, setEntradaUsuario] = useState(
-    `<img src=x onerror="alert('Ataque XSS')" /> <script>alert('Hack')</script>`
-  );
+  const [historial, setHistorial] = useState([]);
+  const [entradaUsuario, setEntradaUsuario] = useState(PAYLOADS_XSS[0].valor);
+  const contadorId = useRef(0);
+
+  // Añade un evento al principio y conserva solo los 5 más recientes
+  const registrarEvento = (descripcion) => {
+    contadorId.current += 1;
+    const evento = {
+      id: contadorId.current,
+      hora: new Date().toLocaleTimeString(),
+      descripcion
+    };
+    setHistorial((prev) => [evento, ...prev].slice(0, MAX_EVENTOS));
+  };
 
   // Manejador sin parámetros (se pasa como referencia: onClick={manejarClickSimple})
   const manejarClickSimple = () => {
-    setUltimoEvento(`Clic simple registrado a las ${new Date().toLocaleTimeString()}`);
+    registrarEvento('Clic simple registrado');
   };
 
   // Manejador con parámetros (requiere función flecha: onClick={() => manejarConParametro(...)})
   const manejarConParametro = (accion) => {
-    setUltimoEvento(`Acción ejecutada con parámetro: "${accion}"`);
+    registrarEvento(`Acción ejecutada con parámetro: "${accion}"`);
+  };
+
+  const cargarPayload = (payload) => {
+    setEntradaUsuario(payload.valor);
+    registrarEvento(`Payload XSS de prueba cargado: ${payload.etiqueta}`);
   };
 
   return (
@@ -41,9 +69,6 @@ export default function EventosYSeguridadXSS() {
       <div className="grid-2">
         <div className="box box-success">
           <h3>Sintaxis de Eventos (Synthetic Events)</h3>
-          <p style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-            Último evento: <strong style={{ color: '#38bdf8' }}>{ultimoEvento}</strong>
-          </p>
           <div className="btn-row">
             {/* Referencia directa a la función */}
             <button type="button" className="btn" onClick={manejarClickSimple}>
@@ -57,7 +82,30 @@ export default function EventosYSeguridadXSS() {
             >
               onClick=&#123;() =&gt; fn(arg)&#125;
             </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => setHistorial([])}
+              disabled={historial.length === 0}
+            >
+              Limpiar historial
+            </button>
           </div>
+
+          {/* [Ticket 06] Historial de los últimos 5 eventos */}
+          <h3>Historial de eventos (últimos {MAX_EVENTOS})</h3>
+          {historial.length === 0 ? (
+            <p className="empty-state">Ningún evento registrado todavía.</p>
+          ) : (
+            <ol className="list" aria-live="polite">
+              {historial.map((evento) => (
+                <li key={evento.id} className="list-item" style={{ fontSize: '0.88rem' }}>
+                  <span>{evento.descripcion}</span>
+                  <code className="code-inline">{evento.hora}</code>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
 
         <div className="box box-warn">
@@ -70,11 +118,28 @@ export default function EventosYSeguridadXSS() {
             value={entradaUsuario}
             onChange={(e) => setEntradaUsuario(e.target.value)}
           />
+
+          {/* [Ticket 06] Banco de pruebas: rellena el input con vectores maliciosos */}
+          <div className="btn-row">
+            {PAYLOADS_XSS.map((payload, i) => (
+              <button
+                key={payload.id}
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => cargarPayload(payload)}
+                title={payload.valor}
+              >
+                Cargar payload XSS de prueba {i + 1}: {payload.etiqueta}
+              </button>
+            ))}
+          </div>
+
           <div
             style={{
               marginTop: '0.75rem',
               padding: '0.65rem',
-              backgroundColor: '#1e293b',
+              backgroundColor: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
               fontFamily: 'Consolas, monospace',
               fontSize: '0.85rem',
