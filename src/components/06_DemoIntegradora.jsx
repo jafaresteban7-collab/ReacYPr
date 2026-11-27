@@ -67,7 +67,27 @@ function TarjetaExpediente({ alumno, seleccionado, onSeleccionar }) {
   );
 }
 
+const FORMULARIO_VACIO = { nombre: '', nota: '', modulos: '' };
+
+// Valida el formulario de alta y devuelve un objeto { campo: mensaje }
+const validarExpediente = ({ nombre, nota }) => {
+  const errores = {};
+  if (!nombre.trim()) errores.nombre = 'El nombre completo es obligatorio.';
+  const valorNota = Number(nota);
+  if (nota === '' || Number.isNaN(valorNota) || valorNota < 0 || valorNota > 10) {
+    errores.nota = 'La nota debe ser un número entre 0 y 10.';
+  }
+  return errores;
+};
+
+// Siguiente id libre: uno más que el mayor existente (nunca se repite)
+const siguienteId = (lista) => lista.reduce((max, a) => Math.max(max, a.id), 0) + 1;
+
 export default function DemoIntegradora() {
+  // [Ticket 08] Los expedientes pasan a ser estado gestionado por React
+  const [expedientes, setExpedientes] = useState(EXPEDIENTES);
+  const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
+  const [errores, setErrores] = useState({});
   const [soloAprobados, setSoloAprobados] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
@@ -75,10 +95,46 @@ export default function DemoIntegradora() {
 
   // [Ticket 07] Búsqueda por nombre + filtro de aprobados + ordenación
   const termino = normalizar(busqueda);
-  const listaFiltrada = EXPEDIENTES
+  const listaFiltrada = expedientes
     .filter((a) => !soloAprobados || a.nota >= 5)
     .filter((a) => normalizar(a.nombre).includes(termino))
     .sort(ORDENACIONES[orden].comparar);
+
+  const actualizarCampo = (e) => {
+    const { name, value } = e.target;
+    setFormulario((prev) => ({ ...prev, [name]: value }));
+    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  // [Ticket 08] Alta de un nuevo expediente
+  const darDeAlta = (e) => {
+    e.preventDefault();
+    const nuevosErrores = validarExpediente(formulario);
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
+      return;
+    }
+
+    const modulos = [
+      ...new Set(
+        formulario.modulos
+          .split(',')
+          .map((m) => m.trim().toUpperCase())
+          .filter(Boolean)
+      )
+    ];
+
+    const nuevo = {
+      id: siguienteId(expedientes),
+      nombre: formulario.nombre.trim(),
+      nota: Math.round(Number(formulario.nota) * 100) / 100,
+      modulos
+    };
+
+    setExpedientes((prev) => [...prev, nuevo]);
+    setFormulario(FORMULARIO_VACIO);
+    setErrores({});
+  };
 
   return (
     <>
@@ -153,6 +209,63 @@ export default function DemoIntegradora() {
         <p className="file-hint">
           Archivo para mostrar en VS Code: <code className="code-inline">src/components/06_DemoIntegradora.jsx</code>
         </p>
+      </section>
+
+      {/* [Ticket 08] Formulario controlado de alta */}
+      <section className="card">
+        <h2>Alta de nuevo expediente</h2>
+        <form onSubmit={darDeAlta} noValidate>
+          <div className="grid-3" style={{ marginBottom: 0 }}>
+            <div className="field">
+              <label htmlFor="alta-nombre">Nombre completo *</label>
+              <input
+                id="alta-nombre"
+                name="nombre"
+                type="text"
+                className={`input ${errores.nombre ? 'input-error' : ''}`}
+                placeholder="Ej.: Elena Martínez"
+                value={formulario.nombre}
+                onChange={actualizarCampo}
+                aria-invalid={Boolean(errores.nombre)}
+                required
+              />
+              {errores.nombre && <span role="alert" className="msg-error">{errores.nombre}</span>}
+            </div>
+            <div className="field">
+              <label htmlFor="alta-nota">Nota (0 – 10) *</label>
+              <input
+                id="alta-nota"
+                name="nota"
+                type="number"
+                min="0"
+                max="10"
+                step="0.1"
+                className={`input ${errores.nota ? 'input-error' : ''}`}
+                placeholder="Ej.: 7.5"
+                value={formulario.nota}
+                onChange={actualizarCampo}
+                aria-invalid={Boolean(errores.nota)}
+                required
+              />
+              {errores.nota && <span role="alert" className="msg-error">{errores.nota}</span>}
+            </div>
+            <div className="field">
+              <label htmlFor="alta-modulos">Módulos (separados por comas)</label>
+              <input
+                id="alta-modulos"
+                name="modulos"
+                type="text"
+                className="input"
+                placeholder="Ej.: DI, PSP, AD"
+                value={formulario.modulos}
+                onChange={actualizarCampo}
+              />
+            </div>
+          </div>
+          <div className="btn-row">
+            <button type="submit" className="btn">Dar de alta</button>
+          </div>
+        </form>
       </section>
     </>
   );
