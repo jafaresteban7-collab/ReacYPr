@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ResumenKPIs from './ResumenKPIs.jsx';
 
 // ============================================================================
@@ -81,18 +81,65 @@ const validarExpediente = ({ nombre, nota }) => {
   return errores;
 };
 
+// [Ticket 10] Persistencia en localStorage
+const CLAVE_STORAGE = 'm10-2-expedientes';
+
+const esExpedienteValido = (a) =>
+  a &&
+  typeof a.id === 'number' &&
+  typeof a.nombre === 'string' &&
+  typeof a.nota === 'number' &&
+  Array.isArray(a.modulos);
+
+// Carga la lista guardada; si no hay datos o están corruptos, usa los iniciales
+const cargarExpedientes = () => {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(CLAVE_STORAGE));
+    if (Array.isArray(guardado) && guardado.every(esExpedienteValido)) return guardado;
+  } catch {
+    // JSON inválido o localStorage bloqueado: seguimos con los datos iniciales
+  }
+  return EXPEDIENTES;
+};
+
 // Siguiente id libre: uno más que el mayor existente (nunca se repite)
 const siguienteId = (lista) => lista.reduce((max, a) => Math.max(max, a.id), 0) + 1;
 
 export default function DemoIntegradora() {
   // [Ticket 08] Los expedientes pasan a ser estado gestionado por React
-  const [expedientes, setExpedientes] = useState(EXPEDIENTES);
+  // [Ticket 10] Inicialización perezosa desde localStorage
+  const [expedientes, setExpedientes] = useState(cargarExpedientes);
+  const [datosRestablecidos, setDatosRestablecidos] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
   const [errores, setErrores] = useState({});
   const [soloAprobados, setSoloAprobados] = useState(false);
   const [seleccionado, setSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [orden, setOrden] = useState('nota-desc');
+
+  // [Ticket 10] Guardado automático en cada cambio. Tras restablecer no se
+  // vuelve a escribir la clave hasta que el usuario modifique los datos.
+  useEffect(() => {
+    if (datosRestablecidos) return;
+    try {
+      localStorage.setItem(CLAVE_STORAGE, JSON.stringify(expedientes));
+    } catch {
+      // Cuota llena o almacenamiento bloqueado: los datos siguen en memoria
+    }
+  }, [expedientes, datosRestablecidos]);
+
+  const restablecerDatos = () => {
+    try {
+      localStorage.removeItem(CLAVE_STORAGE);
+    } catch {
+      // Nada que borrar si localStorage no está disponible
+    }
+    setDatosRestablecidos(true);
+    setExpedientes(EXPEDIENTES);
+    setSeleccionado(null);
+    setFormulario(FORMULARIO_VACIO);
+    setErrores({});
+  };
 
   // [Ticket 07] Búsqueda por nombre + filtro de aprobados + ordenación
   const termino = normalizar(busqueda);
@@ -132,6 +179,7 @@ export default function DemoIntegradora() {
       modulos
     };
 
+    setDatosRestablecidos(false);
     setExpedientes((prev) => [...prev, nuevo]);
     setFormulario(FORMULARIO_VACIO);
     setErrores({});
@@ -184,6 +232,9 @@ export default function DemoIntegradora() {
             onClick={() => setSoloAprobados((prev) => !prev)}
           >
             {soloAprobados ? 'Mostrar todos los alumnos' : 'Filtrar solo aprobados (>= 5)'}
+          </button>
+          <button type="button" className="btn btn-danger" onClick={restablecerDatos}>
+            Restablecer datos iniciales
           </button>
 
           {seleccionado && (
