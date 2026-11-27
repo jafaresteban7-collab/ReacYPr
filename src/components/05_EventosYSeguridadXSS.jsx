@@ -18,7 +18,7 @@ import { useState } from 'react';
 export default function EventosYSeguridadXSS() {
   const [ultimoEvento, setUltimoEvento] = useState('Ninguno todavía');
   const [entradaUsuario, setEntradaUsuario] = useState(
-    "<img src=x onerror="alert('Ataque XSS')" /> <script>alert('Hack')</script>"
+    `<img src=x onerror="alert('Ataque XSS')" /> <script>alert('Hack')</script>`
   );
 
   // Manejador sin parámetros (se pasa como referencia: onClick={manejarClickSimple})
