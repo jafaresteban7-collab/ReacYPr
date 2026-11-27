@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 // ============================================================================
 // [CLAVE EXPOSICIÓN 1] REGLAS SINTÁCTICAS FUNDAMENTALES DE JSX
 // ----------------------------------------------------------------------------
@@ -13,12 +15,21 @@
 //    - <EtiquetaInfo /> (May) -> Componente personalizado de React
 // ============================================================================
 
+const LONGITUD_MINIMA = 3;
+
 // Pequeño componente auxiliar (obligatoriamente empieza en MAYÚSCULA)
 function EtiquetaInfo({ texto }) {
   return <span className="pill">{texto}</span>;
 }
 
 export default function SintaxisYFragmentos() {
+  // [Ticket 02] Input controlado: el valor vive en el estado de React
+  const [nombreAlumno, setNombreAlumno] = useState('');
+
+  const nombreLimpio = nombreAlumno.trim();
+  const esDemasiadoCorto = nombreLimpio.length > 0 && nombreLimpio.length < LONGITUD_MINIMA;
+  const esValido = nombreLimpio.length >= LONGITUD_MINIMA;
+
   // Este bloque demuestra el uso de Fragment (<>...</>):
   // Si inspeccionas el DOM en el navegador (F12), verás que el Fragment
   // NO crea ningún <div> extra envolviendo las tarjetas.
@@ -42,21 +53,34 @@ export default function SintaxisYFragmentos() {
             <input
               id="campo-alumno"
               type="text"
-              className="input"
+              className={`input ${esDemasiadoCorto ? 'input-error' : ''}`}
               placeholder="Ej.: Elena Martínez"
-              readOnly={false}
+              value={nombreAlumno}
+              onChange={(e) => setNombreAlumno(e.target.value)}
+              aria-invalid={esDemasiadoCorto}
+              aria-describedby="campo-alumno-ayuda"
             />
+
+            {/* [Ticket 02] Validación inmediata en cada pulsación */}
+            <div id="campo-alumno-ayuda">
+              {esDemasiadoCorto && (
+                <p role="alert" className="msg-error" style={{ color: 'var(--red-text)' }}>
+                  El nombre debe tener al menos {LONGITUD_MINIMA} caracteres.
+                </p>
+              )}
+              {esValido && <p className="msg-ok">Bienvenido/a al portal, {nombreLimpio}</p>}
+            </div>
           </div>
 
           <div className="box box-warn">
             <h3>Componentes en Mayúscula vs. HTML</h3>
-            <p style={{ marginBottom: '0.75rem', color: '#cbd5e1', fontSize: '0.9rem' }}>
+            <p className="text-soft" style={{ marginBottom: '0.75rem' }}>
               Abajo renderizamos un componente propio <code className="code-inline">&lt;EtiquetaInfo /&gt;</code>:
             </p>
             <EtiquetaInfo texto="Componente con inicial Mayúscula" />
             <br />
             <br />
-            <small style={{ color: '#94a3b8' }}>
+            <small style={{ color: 'var(--muted)' }}>
               Nota: los saltos de línea anteriores usan <code className="code-inline">&lt;br /&gt;</code> cerrado.
             </small>
           </div>
